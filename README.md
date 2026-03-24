@@ -2,7 +2,8 @@
 
 # Preview
 
-![Image](https://github.com/user-attachments/assets/44e21c67-9b38-444d-a78e-22762cfe6bd2)
+
+<img width="1000" height="877" alt="Screenshot 2026-03-24 180754" src="https://github.com/user-attachments/assets/ff075edc-a776-4c2e-b29b-945b00ab7d25" />
 
 
 ## Table of Contents
