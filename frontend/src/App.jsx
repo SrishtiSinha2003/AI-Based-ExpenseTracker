@@ -7,6 +7,8 @@ import Transaction from "./pages/Transaction";
 import { Toaster } from "react-hot-toast";
 import { useQuery } from "@apollo/client";
 import { GET_AUTH_USER } from "./graphql/queries/user.query";
+import ChatBot from "./components/ChatBot";
+import Insights from "./components/Insights";
 
 function App() {
   const { data, loading, error } = useQuery(GET_AUTH_USER);

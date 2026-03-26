@@ -16,6 +16,7 @@ const transactionTypeDef = `#graphql
         getTransaction(transactionId: ID!): Transaction
         getStatistics: [CategoryStatistics!]
         getFinancialInsights: String
+        chatWithAI(message: String!): String
     }
 
     type Mutation {

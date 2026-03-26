@@ -2,11 +2,13 @@ import { useMutation, useQuery } from "@apollo/client";
 import Chart from "../components/Chart";
 import TransactionForm from "../components/TransactionForm";
 import Cards from "../components/Cards";
-import AIInsights from "../components/AIInsights";
+import AIInsights from "../components/Insights";
 import { FaSignOutAlt } from "react-icons/fa";
 import { GET_AUTH_USER, GET_USER } from "../graphql/queries/user.query";
 import { LOGOUT } from "../graphql/mutations/user.mutation";
 import toast from "react-hot-toast";
+import ChatBot from "../components/ChatBot";
+
 
 const Home = () => {
   const { data } = useQuery(GET_AUTH_USER);
@@ -43,7 +45,12 @@ const Home = () => {
       <section className="flex flex-wrap justify-center xl:justify-between gap-4 pt-20 pb-10">
         <Cards />
       </section>
-      <AIInsights />
+     <section className="w-full pt-10 pb-10">
+  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+    <AIInsights />
+    <ChatBot />
+  </div>
+</section>
     </div>
   );
 };
