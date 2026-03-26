@@ -72,6 +72,7 @@ const transactionResolver = {
         insights: "No transactions found.",
         score: 0,
         alerts: [],
+        categoryInsights: "",
       };
     }
 
@@ -84,45 +85,52 @@ const transactionResolver = {
     const expense = summary.expense || 0;
     const saving = summary.saving || 0;
 
-    // 🧠 HEALTH SCORE LOGIC
+    // 🧠 HEALTH SCORE
     let score = 100;
-
     if (expense > income) score -= 40;
     if (saving === 0) score -= 20;
     if (expense > income * 0.8) score -= 20;
     if (transactions.length < 3) score -= 10;
-
     if (score < 0) score = 0;
 
     // 🚨 ALERTS
     const alerts = [];
 
-    if (expense > income) {
-      alerts.push("⚠️ Expenses exceed income");
+    if (expense > income) alerts.push("⚠️ Expenses exceed income");
+    if (saving === 0) alerts.push("⚠️ No savings detected");
+    if (expense > income * 0.8)
+      alerts.push("⚠️ Spending is too high (>80% income)");
+
+    // 📊 CATEGORY TOTALS
+    const categoryTotals = transactions.reduce((acc, tx) => {
+      if (tx.type === "expense") {
+        acc[tx.category] = (acc[tx.category] || 0) + tx.amount;
+      }
+      return acc;
+    }, {});
+
+    for (const category in categoryTotals) {
+      if (categoryTotals[category] > income * 0.3) {
+        alerts.push(`⚠️ High spending on ${category}`);
+      }
     }
 
-    if (saving === 0) {
-      alerts.push("⚠️ No savings detected");
+    if (transactions.length < 3) {
+      alerts.push("⚠️ Too few transactions — data may be incomplete");
     }
 
-    if (expense > income * 0.8) {
-      alerts.push("⚠️ Spending is too high");
-    }
+    const groq = new Groq({
+      apiKey: process.env.GROQ_API_KEY,
+    });
 
-    // 🤖 AI INSIGHTS (SHORT)
+    // 🤖 GENERAL INSIGHTS
     const prompt = `
-You are a financial assistant.
-
-Give ONLY 3-4 short insights.
+Give 3 short financial tips.
 
 Rules:
+- One line each
 - No markdown
-- No headings
-- No symbols like ** or ###
-- No LaTeX
-- No equations
-- Each point in one line
-- Max 15 words
+- No symbols
 
 Data:
 Income: ${income}
@@ -130,19 +138,35 @@ Expense: ${expense}
 Saving: ${saving}
 `;
 
-    const groq = new Groq({
-      apiKey: process.env.GROQ_API_KEY,
-    });
-
     const response = await groq.chat.completions.create({
       model: "groq/compound",
       messages: [{ role: "user", content: prompt }],
+    });
+
+    // 🤖 CATEGORY-WISE AI INSIGHTS
+    const categoryPrompt = `
+Analyze spending category-wise.
+
+Rules:
+- One line per category
+- Max 12 words
+- No markdown or symbols
+
+Data:
+${JSON.stringify(categoryTotals)}
+`;
+
+    const categoryResponse = await groq.chat.completions.create({
+      model: "groq/compound",
+      messages: [{ role: "user", content: categoryPrompt }],
     });
 
     return {
       insights: response.choices[0].message.content,
       score,
       alerts,
+      categoryInsights:
+        categoryResponse.choices[0].message.content,
     };
   } catch (error) {
     console.error(error);
@@ -150,6 +174,7 @@ Saving: ${saving}
       insights: "Failed to generate insights",
       score: 0,
       alerts: [],
+      categoryInsights: "",
     };
   }
 },

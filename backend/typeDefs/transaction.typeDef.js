@@ -15,6 +15,7 @@ const transactionTypeDef = `#graphql
     insights: String
     score: Int
     alerts: [String]
+    categoryInsights: String
     }
 
     type Query {
