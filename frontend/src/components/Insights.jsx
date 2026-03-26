@@ -56,6 +56,31 @@ const insights = cleanText.split("\n").filter(Boolean);
         💯 Score: {score}/100
       </p>
 
+        <div className="mt-4">
+  <h3 className="text-indigo-400 font-semibold mb-2">
+    📊 Category Insights
+  </h3>
+
+  {data?.getFinancialInsights?.categoryInsights
+    ?.split("\n")
+    .filter(Boolean)
+    .map((item, i) => (
+      <div
+        key={i}
+        className="bg-slate-700 p-2 rounded-lg text-gray-200 mb-2"
+      >
+        {item}
+      </div>
+    ))}
+</div>
+
+
+      {/* 📈 PREDICTION */}
+<p className="text-yellow-400 mb-3">
+  📈 Next Month Prediction: ₹
+  {data?.getFinancialInsights?.predictedExpense || 0}
+</p>
+
       {/* 🚨 ALERTS */}
       <div className="mb-4 space-y-2">
   {alerts.length > 0 ? (

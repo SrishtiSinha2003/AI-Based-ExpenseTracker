@@ -161,12 +161,41 @@ ${JSON.stringify(categoryTotals)}
       messages: [{ role: "user", content: categoryPrompt }],
     });
 
+      // 📈 PREDICT FUTURE SPENDING
+const expenseTransactions = transactions.filter(
+  (tx) => tx.type === "expense"
+);
+
+const monthlyExpenses = {};
+
+expenseTransactions.forEach((tx) => {
+  const date = new Date(tx.date);
+  const key = `${date.getFullYear()}-${date.getMonth()}`;
+
+  monthlyExpenses[key] =
+    (monthlyExpenses[key] || 0) + tx.amount;
+});
+
+const months = Object.keys(monthlyExpenses);
+
+let predictedExpense = 0;
+
+if (months.length > 0) {
+  const total = Object.values(monthlyExpenses).reduce(
+    (a, b) => a + b,
+    0
+  );
+  predictedExpense = Math.round(total / months.length);
+}
+
+
     return {
       insights: response.choices[0].message.content,
       score,
       alerts,
       categoryInsights:
         categoryResponse.choices[0].message.content,
+        predictedExpense,
     };
   } catch (error) {
     console.error(error);

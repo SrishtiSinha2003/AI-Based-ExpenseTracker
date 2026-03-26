@@ -50,6 +50,7 @@ export const GET_FINANCIAL_INSIGHTS = gql`
       score
       alerts
       categoryInsights
+      predictedExpense
     }
   }
 `;

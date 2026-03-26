@@ -16,6 +16,7 @@ const transactionTypeDef = `#graphql
     score: Int
     alerts: [String]
     categoryInsights: String
+    predictedExpense: Int
     }
 
     type Query {
