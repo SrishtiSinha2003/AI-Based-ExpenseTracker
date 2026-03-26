@@ -11,11 +11,17 @@ const transactionTypeDef = `#graphql
         user: User!
     }
 
+    type FinancialInsights {
+    insights: String
+    score: Int
+    alerts: [String]
+    }
+
     type Query {
         getTransactions: [Transaction!]
         getTransaction(transactionId: ID!): Transaction
         getStatistics: [CategoryStatistics!]
-        getFinancialInsights: String
+        getFinancialInsights:  FinancialInsights
         chatWithAI(message: String!): String
     }
 

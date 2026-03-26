@@ -60,59 +60,99 @@ const transactionResolver = {
 
     // 🔥 AI FINANCIAL INSIGHTS
     getFinancialInsights: async (_, __, context) => {
-      try {
-        const user = await context.getUser();
-        if (!user) throw new Error("Unauthorized");
+  try {
+    const user = await context.getUser();
+    if (!user) throw new Error("Unauthorized");
 
-        const userId = user.id || user._id;
-        const transactions = await Transaction.find({ userId });
+    const userId = user.id || user._id;
+    const transactions = await Transaction.find({ userId });
 
-        if (transactions.length === 0) {
-          return "No transactions found. Add some expenses to get insights!";
-        }
+    if (transactions.length === 0) {
+      return {
+        insights: "No transactions found.",
+        score: 0,
+        alerts: [],
+      };
+    }
 
-        const summary = transactions.reduce((acc, tx) => {
-          acc[tx.category] = (acc[tx.category] || 0) + tx.amount;
-          return acc;
-        }, {});
+    const summary = transactions.reduce((acc, tx) => {
+      acc[tx.category] = (acc[tx.category] || 0) + tx.amount;
+      return acc;
+    }, {});
 
-        const totalIncome = summary.income || 0;
-        const totalExpense = summary.expense || 0;
-        const totalSaving = summary.saving || 0;
+    const income = summary.income || 0;
+    const expense = summary.expense || 0;
+    const saving = summary.saving || 0;
 
-        const prompt = `
-You are a smart financial assistant.
+    // 🧠 HEALTH SCORE LOGIC
+    let score = 100;
+
+    if (expense > income) score -= 40;
+    if (saving === 0) score -= 20;
+    if (expense > income * 0.8) score -= 20;
+    if (transactions.length < 3) score -= 10;
+
+    if (score < 0) score = 0;
+
+    // 🚨 ALERTS
+    const alerts = [];
+
+    if (expense > income) {
+      alerts.push("⚠️ Expenses exceed income");
+    }
+
+    if (saving === 0) {
+      alerts.push("⚠️ No savings detected");
+    }
+
+    if (expense > income * 0.8) {
+      alerts.push("⚠️ Spending is too high");
+    }
+
+    // 🤖 AI INSIGHTS (SHORT)
+    const prompt = `
+You are a financial assistant.
 
 Give ONLY 3-4 short insights.
 
 Rules:
-- Max 20 words each
-- Simple language
-- Bullet points only
+- No markdown
+- No headings
+- No symbols like ** or ###
+- No LaTeX
+- No equations
+- Each point in one line
+- Max 15 words
 
 Data:
-Income: ${totalIncome}
-Expense: ${totalExpense}
-Savings: ${totalSaving}
-Breakdown: ${JSON.stringify(summary)}
-Transactions: ${transactions.length}
+Income: ${income}
+Expense: ${expense}
+Saving: ${saving}
 `;
 
-        const groq = new Groq({
-          apiKey: process.env.GROQ_API_KEY,
-        });
+    const groq = new Groq({
+      apiKey: process.env.GROQ_API_KEY,
+    });
 
-        const response = await groq.chat.completions.create({
-          model: "groq/compound",
-          messages: [{ role: "user", content: prompt }],
-        });
+    const response = await groq.chat.completions.create({
+      model: "groq/compound",
+      messages: [{ role: "user", content: prompt }],
+    });
 
-        return response.choices[0].message.content.trim();
-      } catch (error) {
-        console.error("🔥 AI Insights Error:", error);
-        return "Unable to generate insights at this time.";
-      }
-    },
+    return {
+      insights: response.choices[0].message.content,
+      score,
+      alerts,
+    };
+  } catch (error) {
+    console.error(error);
+    return {
+      insights: "Failed to generate insights",
+      score: 0,
+      alerts: [],
+    };
+  }
+},
 
     // 🤖 AI CHATBOT
     chatWithAI: async (_, { message }, context) => {
