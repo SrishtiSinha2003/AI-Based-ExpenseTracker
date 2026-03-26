@@ -19,9 +19,18 @@ const AIInsights = () => {
       </div>
     );
 
-  // 🔥 Split insights into clean UI blocks
-  const insights =
-    data?.getFinancialInsights?.split("\n").filter(Boolean) || [];
+  const insightsText = data?.getFinancialInsights?.insights || "";
+  const score = data?.getFinancialInsights?.score || 0;
+  const alerts = data?.getFinancialInsights?.alerts || [];
+
+  const cleanText = insightsText
+  .replace(/\\\[.*?\\\]/g, "") // remove LaTeX
+  .replace(/\*\*/g, "")       // remove **
+  .replace(/---/g, "")        // remove ---
+  .replace(/#/g, "")          // remove headings
+  .trim();
+
+const insights = cleanText.split("\n").filter(Boolean);
 
   return (
     <div className="bg-slate-800 p-6 rounded-2xl shadow-lg mt-6 mb-10 max-w-2xl mx-auto">
@@ -42,7 +51,19 @@ const AIInsights = () => {
         </button>
       </div>
 
-      {/* Insights */}
+      {/* 💯 SCORE */}
+      <p className="text-lg text-green-400 mb-3">
+        💯 Score: {score}/100
+      </p>
+
+      {/* 🚨 ALERTS */}
+      <div className="mb-3">
+        {alerts.map((alert, i) => (
+          <p key={i} className="text-red-400">{alert}</p>
+        ))}
+      </div>
+
+      {/* INSIGHTS */}
       <div className="space-y-3">
         {insights.length > 0 ? (
           insights.map((item, i) => (

@@ -45,6 +45,10 @@ export const GET_STATISTICS = gql`
 
 export const GET_FINANCIAL_INSIGHTS = gql`
   query GetFinancialInsights {
-    getFinancialInsights
+    getFinancialInsights {
+      insights
+      score
+      alerts
+    }
   }
 `;
