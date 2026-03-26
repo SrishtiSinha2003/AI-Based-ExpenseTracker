@@ -57,12 +57,38 @@ const insights = cleanText.split("\n").filter(Boolean);
       </p>
 
       {/* 🚨 ALERTS */}
-      <div className="mb-3">
-        {alerts.map((alert, i) => (
-          <p key={i} className="text-red-400">{alert}</p>
-        ))}
+      <div className="mb-4 space-y-2">
+  {alerts.length > 0 ? (
+    alerts.map((alert, i) => (
+      <div
+        key={i}
+        className="bg-red-500/10 border border-red-500/30 text-red-400 p-2 rounded-lg"
+      >
+        {alert}
       </div>
+    ))
+  ) : (
+    <p className="text-green-400">✅ No major issues detected</p>
+  )}
+</div>
+{/* 📊 CATEGORY INSIGHTS */}
+<div className="mt-4">
+  <h3 className="text-indigo-400 font-semibold mb-2">
+    📊 Category Insights
+  </h3>
 
+  {data?.getFinancialInsights?.categoryInsights
+    ?.split("\n")
+    .filter(Boolean)
+    .map((item, i) => (
+      <div
+        key={i}
+        className="bg-slate-700 p-2 rounded-lg text-gray-200 mb-2"
+      >
+        {item}
+      </div>
+    ))}
+</div>
       {/* INSIGHTS */}
       <div className="space-y-3">
         {insights.length > 0 ? (

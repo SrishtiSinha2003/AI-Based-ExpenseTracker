@@ -49,6 +49,7 @@ export const GET_FINANCIAL_INSIGHTS = gql`
       insights
       score
       alerts
+      categoryInsights
     }
   }
 `;
