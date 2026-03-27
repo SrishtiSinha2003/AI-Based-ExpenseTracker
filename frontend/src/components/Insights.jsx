@@ -96,24 +96,6 @@ const insights = cleanText.split("\n").filter(Boolean);
     <p className="text-green-400">✅ No major issues detected</p>
   )}
 </div>
-{/* 📊 CATEGORY INSIGHTS */}
-<div className="mt-4">
-  <h3 className="text-indigo-400 font-semibold mb-2">
-    📊 Category Insights
-  </h3>
-
-  {data?.getFinancialInsights?.categoryInsights
-    ?.split("\n")
-    .filter(Boolean)
-    .map((item, i) => (
-      <div
-        key={i}
-        className="bg-slate-700 p-2 rounded-lg text-gray-200 mb-2"
-      >
-        {item}
-      </div>
-    ))}
-</div>
       {/* INSIGHTS */}
       <div className="space-y-3">
         {insights.length > 0 ? (
