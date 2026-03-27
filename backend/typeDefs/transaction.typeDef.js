@@ -56,6 +56,19 @@ const transactionTypeDef = `#graphql
         description: String
         location: String
     }
+
+    type Budget {
+  budget: Int
+  spent: Int
+  remaining: Int
+}
+
+extend type Query {
+  getBudgetStatus: Budget
+}
+  extend type Mutation {
+  updateBudget(amount: Int!): Int
+}
 `;
 
 export default transactionTypeDef;

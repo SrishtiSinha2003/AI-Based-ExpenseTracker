@@ -20,6 +20,10 @@ const userSchema = new mongoose.Schema(
       required: true,
       enum: ["male", "female"],
     },
+    budget: {
+  type: Number,
+  default: 20000
+},
     profilePic: {
       type: String,
       default: "/noavatar.png",

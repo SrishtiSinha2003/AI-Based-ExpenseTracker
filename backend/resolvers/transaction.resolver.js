@@ -58,6 +58,32 @@ const transactionResolver = {
       }
     },
 
+      getBudgetStatus: async (_, __, context) => {
+  const user = await context.getUser();
+  if (!user) throw new Error("Unauthorized");
+
+  const userId = user.id;
+  const transactions = await Transaction.find({ userId });
+
+  let expense = 0;
+
+  transactions.forEach((tx) => {
+    if (tx.category?.toLowerCase() === "expense") {
+      expense += tx.amount;
+    }
+  });
+
+  const budget = user.budget || 20000; // 🔥 static (or make dynamic later)
+
+  return {
+    budget,
+    spent: expense,
+    remaining: budget - expense,
+  };
+},
+
+
+
     // 🔥 AI FINANCIAL INSIGHTS
     getFinancialInsights: async (_, __, context) => {
   try {
@@ -319,6 +345,15 @@ Answer briefly in 2-3 lines.
         throw new Error(error.message || "An error occurred");
       }
     },
+    updateBudget: async (_, { amount }, context) => {
+  const user = await context.getUser();
+  if (!user) throw new Error("Unauthorized");
+
+  user.budget = amount;
+  await user.save();
+
+  return user.budget;
+},
   },
 
   Transaction: {

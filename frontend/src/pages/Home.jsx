@@ -8,6 +8,7 @@ import { GET_AUTH_USER, GET_USER } from "../graphql/queries/user.query";
 import { LOGOUT } from "../graphql/mutations/user.mutation";
 import toast from "react-hot-toast";
 import ChatBot from "../components/ChatBot";
+import Budget from "../components/Budget";
 
 
 const Home = () => {
@@ -51,6 +52,9 @@ const Home = () => {
     <ChatBot />
   </div>
 </section>
+<div className="mt-6">
+  <Budget />
+</div>
     </div>
   );
 };

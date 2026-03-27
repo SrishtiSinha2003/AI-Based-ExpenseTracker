@@ -35,6 +35,9 @@ const userTypeDef = `#graphql
     type LogoutResponse {
         message: String!
     }
+        extend type Mutation {
+  updateBudget(amount: Int!): Int
+}
 `;
 
 export default userTypeDef;
