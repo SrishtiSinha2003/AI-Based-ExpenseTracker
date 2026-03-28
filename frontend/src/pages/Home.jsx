@@ -9,7 +9,8 @@ import { LOGOUT } from "../graphql/mutations/user.mutation";
 import toast from "react-hot-toast";
 import ChatBot from "../components/ChatBot";
 import Budget from "../components/Budget";
-
+import SpendingTrend from "../components/SpendingTrends";
+import SavingGoal from "../components/SavingGoals";
 
 const Home = () => {
   const { data } = useQuery(GET_AUTH_USER);
@@ -39,9 +40,24 @@ const Home = () => {
           <FaSignOutAlt className="cursor-pointer" size={30} onClick={logout} />
         </div>
       </section>
+      <div className="w-full flex justify-center mt-8">
+  <div className="flex flex-wrap justify-center gap-8 max-w-5xl w-full">
+    
+    <div className="flex-1 min-w-[280px] max-w-[320px]">
+      <Budget />
+    </div>
+
+    <div className="flex-1 min-w-[280px] max-w-[320px]">
+      <SavingGoal />
+    </div>
+
+  </div>
+</div>
+
       <section className="flex flex-col md:flex-row pt-10 gap-10">
         <Chart />
         <TransactionForm />
+        <SpendingTrend/>
       </section>
       <section className="flex flex-wrap justify-center xl:justify-between gap-4 pt-20 pb-10">
         <Cards />
@@ -52,9 +68,6 @@ const Home = () => {
     <ChatBot />
   </div>
 </section>
-<div className="mt-6">
-  <Budget />
-</div>
     </div>
   );
 };
