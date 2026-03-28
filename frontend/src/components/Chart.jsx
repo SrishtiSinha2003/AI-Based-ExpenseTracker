@@ -80,11 +80,12 @@ const Chart = () => {
       </h2>
 
       {data?.getStatistics?.length > 0 ? (
-        <div className="relative">
+        <div className="relative flex items-center justify-center">
           {/* Chart */}
           <Doughnut
             data={chartData}
             options={{
+              maintainAspectRatio: false,
               plugins: {
                 legend: {
                   display: true,
@@ -106,7 +107,7 @@ const Chart = () => {
           />
 
           {/* 🔥 Center Total */}
-          <div className="absolute inset-0 flex flex-col items-center justify-center">
+          <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
             <p className="text-gray-400 text-sm">Total</p>
             <p className="text-white text-xl font-bold">
               ₹{total}
