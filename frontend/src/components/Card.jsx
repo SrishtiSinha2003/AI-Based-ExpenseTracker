@@ -1,120 +1,103 @@
-import {
-  FaCartPlus,
-  FaCashRegister,
-  FaEdit,
-  FaIdCard,
-  FaLocationArrow,
-  FaTrash,
-} from "react-icons/fa";
+import { FaTrash, FaEdit, FaMapMarkerAlt, FaCreditCard, FaMoneyBillWave } from "react-icons/fa";
 import { Link } from "react-router-dom";
 import { DELETE_TRANSACTION } from "../graphql/mutations/transaction.mutation";
 import { useMutation } from "@apollo/client";
 import toast from "react-hot-toast";
 
+const CATEGORY_META = {
+  income:  { icon: "💰", color: "#22c55e", bg: "rgba(34,197,94,0.08)",  border: "rgba(34,197,94,0.2)",  badge: "bg-green-500/15 text-green-400" },
+  expense: { icon: "💸", color: "#ef4444", bg: "rgba(239,68,68,0.08)",  border: "rgba(239,68,68,0.2)",  badge: "bg-red-500/15 text-red-400" },
+  saving:  { icon: "🏦", color: "#3b82f6", bg: "rgba(59,130,246,0.08)", border: "rgba(59,130,246,0.2)", badge: "bg-blue-500/15 text-blue-400" },
+};
+
 const Card = ({ transaction }) => {
-  const [deleteTransaction] = useMutation(DELETE_TRANSACTION, {
+  const [deleteTransaction, { loading }] = useMutation(DELETE_TRANSACTION, {
     refetchQueries: ["GetTransactions", "GetStatistics"],
   });
 
   const handleDelete = async () => {
     try {
       await deleteTransaction({ variables: { id: transaction._id } });
-      toast.success("Transaction deleted successfully");
-    } catch (error) {
-      console.log(error);
-      toast.error(error.message);
+      toast.success("Transaction deleted");
+    } catch (err) {
+      toast.error(err.message);
     }
   };
 
-  const styles = {
-    income: {
-      bg: "from-green-500/20 to-green-700/40",
-      text: "text-green-400",
-      border: "border-green-500/30",
-    },
-    expense: {
-      bg: "from-red-500/20 to-red-700/40",
-      text: "text-red-400",
-      border: "border-red-500/30",
-    },
-    saving: {
-      bg: "from-blue-500/20 to-blue-700/40",
-      text: "text-blue-400",
-      border: "border-blue-500/30",
-    },
-  };
-
-  const current = styles[transaction.category];
+  const meta = CATEGORY_META[transaction.category] || CATEGORY_META.expense;
+  const formattedDate = transaction.date
+    ? new Date(transaction.date).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })
+    : "—";
 
   return (
     <div
-      className={`rounded-2xl p-5 w-80 md:w-96 
-      bg-gradient-to-br ${current.bg} 
-      border ${current.border} 
-      backdrop-blur-md shadow-lg 
-      hover:scale-[1.02] hover:shadow-xl 
-      transition-all duration-300`}
+      className="relative rounded-2xl p-5 w-72 md:w-80 overflow-hidden transition-all duration-300 hover:scale-[1.02] hover:shadow-2xl group"
+      style={{
+        background: `linear-gradient(135deg, ${meta.bg}, rgba(15,23,42,0.9))`,
+        border: `1px solid ${meta.border}`,
+        boxShadow: `0 4px 24px ${meta.bg}`,
+      }}
     >
-      {/* Header */}
-      <div className="flex items-center justify-between mb-3">
-        <h3 className={`text-xl font-semibold capitalize ${current.text}`}>
-          {transaction.category}
-        </h3>
+      {/* Subtle glow blob */}
+      <div
+        className="absolute -top-6 -right-6 w-24 h-24 rounded-full opacity-20 blur-2xl pointer-events-none"
+        style={{ backgroundColor: meta.color }}
+      />
 
-        <div className="flex items-center gap-3 text-gray-300">
-          <button
-            onClick={handleDelete}
-            className="hover:text-red-400 transition"
+      {/* Top row: icon + category + actions */}
+      <div className="flex items-start justify-between mb-4">
+        <div className="flex items-center gap-2.5">
+          <div
+            className="w-10 h-10 rounded-xl flex items-center justify-center text-xl shrink-0"
+            style={{ background: `${meta.color}20`, border: `1px solid ${meta.border}` }}
           >
-            <FaTrash />
+            {meta.icon}
+          </div>
+          <div>
+            <p className="text-white font-semibold capitalize text-sm">{transaction.category}</p>
+            <p className="text-gray-500 text-xs">{formattedDate}</p>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+          <button onClick={handleDelete} disabled={loading}
+            className="w-7 h-7 flex items-center justify-center rounded-lg bg-red-500/10 text-red-400 hover:bg-red-500/20 transition">
+            <FaTrash size={11} />
           </button>
-
-          <Link
-            to={`/transaction/${transaction._id}`}
-            className="hover:text-indigo-400 transition"
-          >
-            <FaEdit />
+          <Link to={`/transaction/${transaction._id}`}
+            className="w-7 h-7 flex items-center justify-center rounded-lg bg-indigo-500/10 text-indigo-400 hover:bg-indigo-500/20 transition">
+            <FaEdit size={11} />
           </Link>
         </div>
       </div>
 
-      {/* Divider */}
-      <div className="border-t border-gray-600 mb-3"></div>
+      {/* Amount — prominent */}
+      <div className="mb-4">
+        <p className="text-3xl font-bold" style={{ color: meta.color }}>
+          ₹{transaction.amount.toLocaleString()}
+        </p>
+        {transaction.description && (
+          <p className="text-gray-300 text-sm mt-0.5 truncate">{transaction.description}</p>
+        )}
+      </div>
 
-      {/* Content */}
-      <div className="space-y-2 text-sm text-gray-200">
-        <div className="flex items-center gap-2">
-          <FaIdCard className="opacity-70" />
-          <p className="truncate">
-            <span className="text-gray-400">Desc:</span>{" "}
-            {transaction.description}
-          </p>
+      {/* Footer row */}
+      <div className="flex items-center justify-between pt-3 border-t border-white/5">
+        <div className="flex items-center gap-1.5 text-gray-400 text-xs">
+          {transaction.type === "card" ? <FaCreditCard size={11} /> : <FaMoneyBillWave size={11} />}
+          <span className="capitalize">{transaction.type}</span>
         </div>
 
-        <div className="flex items-center gap-2 capitalize">
-          <FaCartPlus className="opacity-70" />
-          <p>
-            <span className="text-gray-400">Type:</span> {transaction.type}
-          </p>
-        </div>
+        {transaction.location && (
+          <div className="flex items-center gap-1 text-gray-400 text-xs max-w-[120px]">
+            <FaMapMarkerAlt size={10} className="shrink-0" />
+            <span className="truncate">{transaction.location}</span>
+          </div>
+        )}
 
-        <div className="flex items-center gap-2">
-          <FaCashRegister className="opacity-70" />
-          <p>
-            <span className="text-gray-400">Amount:</span>{" "}
-            <span className={`font-semibold ${current.text}`}>
-              ₹{transaction.amount}
-            </span>
-          </p>
-        </div>
-
-        <div className="flex items-center gap-2">
-          <FaLocationArrow className="opacity-70" />
-          <p className="truncate">
-            <span className="text-gray-400">Location:</span>{" "}
-            {transaction.location || "N/A"}
-          </p>
-        </div>
+        <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${meta.badge}`}>
+          {transaction.category}
+        </span>
       </div>
     </div>
   );
