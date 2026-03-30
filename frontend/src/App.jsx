@@ -11,6 +11,7 @@ import Planning from "./pages/Planning";
 import Profile from "./pages/Profile";
 import Onboarding from "./pages/Onboarding";
 import ChatBot from "./components/ChatBot";
+import ThemeToggle from "./components/ThemeToggle";
 import { Toaster } from "react-hot-toast";
 import { useQuery } from "@apollo/client";
 import { GET_AUTH_USER } from "./graphql/queries/user.query";
@@ -90,6 +91,7 @@ function App() {
       {authUser && !needsOnboarding && <Header />}
       <AnimatedRoutes authUser={authUser} needsOnboarding={needsOnboarding} />
       {authUser && !needsOnboarding && <ChatBot />}
+      <ThemeToggle />
       <Toaster position="top-right" toastOptions={{ style: { background: "#1e293b", color: "#fff", border: "1px solid #334155" } }} />
     </BrowserRouter>
   );

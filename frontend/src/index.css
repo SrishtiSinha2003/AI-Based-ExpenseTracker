@@ -30,8 +30,9 @@ html.light {
   --text-muted:   #64748b;
 }
 
-html.light body {
-  background-color: #f1f5f9;
+html.light body,
+html.light #root > div {
+  background-color: #f1f5f9 !important;
   color: #0f172a;
 }
 
