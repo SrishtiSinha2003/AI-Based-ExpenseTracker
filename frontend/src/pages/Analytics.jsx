@@ -1,6 +1,6 @@
 import SpendingTrend from "../components/SpendingTrends";
 import AIInsights from "../components/Insights";
-import ChatBot from "../components/ChatBot";
+import Comparison from "../components/Comparison";
 
 const Analytics = () => {
   return (
@@ -10,15 +10,16 @@ const Analytics = () => {
       </h2>
       <p className="text-center text-gray-400 mb-10">Deep dive into your spending patterns</p>
 
-      {/* Spending Trend — full width */}
-      <div className="mb-8">
+      <div className="mb-6">
         <SpendingTrend />
       </div>
 
-      {/* AI Insights + ChatBot side by side */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="mb-6">
+        <Comparison />
+      </div>
+
+      <div>
         <AIInsights />
-        <ChatBot />
       </div>
     </div>
   );

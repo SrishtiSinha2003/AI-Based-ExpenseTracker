@@ -1,5 +1,6 @@
 import Transaction from "../models/transaction.model.js";
 import User from "../models/user.model.js";
+import Notification from "../models/notification.model.js";
 import Groq from "groq-sdk";
 
 const transactionResolver = {
@@ -227,30 +228,53 @@ const transactionResolver = {
         const userId = user.id || user._id;
         const transactions = await Transaction.find({ userId });
 
-        const prompt = `
-You are a financial assistant.
-
-User question: ${message}
-
-User financial data:
-${JSON.stringify(transactions)}
-
-Answer briefly in 2-3 lines.
-`;
-
-        const groq = new Groq({
-          apiKey: process.env.GROQ_API_KEY,
+        // Build a compact summary instead of dumping raw JSON
+        let income = 0, expense = 0, saving = 0;
+        transactions.forEach((tx) => {
+          const cat = tx.category?.toLowerCase();
+          if (cat === "income") income += tx.amount;
+          else if (cat === "expense") expense += tx.amount;
+          else if (cat === "saving") saving += tx.amount;
         });
+
+        const recentTx = transactions
+          .slice(-5)
+          .map((tx) => `${tx.category} Rs${tx.amount} - ${tx.description} (${tx.date})`)
+          .join(", ");
+
+        const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
 
         const response = await groq.chat.completions.create({
           model: "groq/compound",
-          messages: [{ role: "user", content: prompt }],
+          messages: [
+            {
+              role: "system",
+              content: "You are a helpful personal finance assistant. Reply in plain text only. No markdown, no asterisks, no bullet symbols, no bold, no numbering. Keep answers concise, 2-4 sentences max.",
+            },
+            {
+              role: "user",
+              content: `My finances: Income Rs${income}, Expense Rs${expense}, Saving Rs${saving}. Recent transactions: ${recentTx}.\n\nQuestion: ${message}`,
+            },
+          ],
+          temperature: 0.5,
+          max_tokens: 200,
         });
 
-        return response.choices[0].message.content;
+        const raw = response.choices[0].message.content;
+        // Strip any markdown the model sneaks through
+        return raw
+          .replace(/\*{1,3}/g, "")
+          .replace(/_{1,2}/g, "")
+          .replace(/#{1,6}\s*/g, "")
+          .replace(/^\s*[-+>]\s+/gm, "")
+          .replace(/^\s*\d+[.)]\s+/gm, "")
+          .replace(/`+/g, "")
+          .replace(/---+/g, "")
+          .replace(/\n{3,}/g, "\n\n")
+          .trim();
       } catch (error) {
-        console.error("🔥 Chatbot Error:", error);
-        return "AI failed to respond.";
+        console.error("Chatbot Error:", error);
+        return "Sorry, I couldn't process that. Please try again.";
       }
     },
   },
@@ -259,19 +283,29 @@ Answer briefly in 2-3 lines.
     addTransaction: async (_, { input }, context) => {
       try {
         if (!context.getUser()) throw new Error("Unauthorized");
-
-        if (input.amount < 0 || input.amount > 1000000) {
-          throw new Error("Invalid amount");
-        }
-
-        if (!input.description || !input.date || !input.amount) {
-          throw new Error("Missing required fields");
-        }
+        if (input.amount < 0 || input.amount > 1000000) throw new Error("Invalid amount");
+        if (!input.description || !input.date || !input.amount) throw new Error("Missing required fields");
 
         const userId = context.getUser().id;
         const newTx = new Transaction({ ...input, userId });
-
         await newTx.save();
+
+        // Budget alert
+        if (input.category === "expense") {
+          const user = await User.findById(userId);
+          const month = input.date.slice(0, 7);
+          const txs = await Transaction.find({ userId });
+          const monthlyExpense = txs
+            .filter((t) => t.category === "expense" && t.date?.startsWith(month))
+            .reduce((s, t) => s + t.amount, 0);
+          const budget = user?.budget || 20000;
+          const pct = Math.round((monthlyExpense / budget) * 100);
+          if (pct >= 90 && pct < 100) {
+            await Notification.create({ userId, message: `⚠️ You've used ${pct}% of your monthly budget!`, type: "warning" });
+          } else if (monthlyExpense >= budget) {
+            await Notification.create({ userId, message: `🚨 You've exceeded your monthly budget of ₹${budget}!`, type: "alert" });
+          }
+        }
         return newTx;
       } catch (error) {
         console.log(error);

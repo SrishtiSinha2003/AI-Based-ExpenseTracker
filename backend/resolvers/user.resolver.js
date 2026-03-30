@@ -47,12 +47,7 @@ const userResolver = {
           throw new Error("Username already exists");
         }
 
-        const profilePicMan =
-          "https://avatar.iran.liara.run/public/boy?username=" + username;
-        const profilePicWoman =
-          "https://avatar.iran.liara.run/public/girl?username=" + username;
-
-        const profilePic = gender === "male" ? profilePicMan : profilePicWoman;
+        const profilePic = `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=${gender === "male" ? "6366f1" : "ec4899"}&color=fff&bold=true&size=128`;
 
         const user = new User({
           username,

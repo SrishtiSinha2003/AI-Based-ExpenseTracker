@@ -1,5 +1,7 @@
 import Budget from "../components/Budget";
 import SavingGoal from "../components/SavingGoals";
+import RecurringTransactions from "../components/RecurringTransactions";
+import ExportPDF from "../components/ExportPDF";
 
 const Planning = () => {
   return (
@@ -7,12 +9,12 @@ const Planning = () => {
       <h2 className="text-3xl font-bold text-center bg-gradient-to-r from-green-400 via-teal-400 to-cyan-400 bg-clip-text text-transparent mb-2">
         💰 Financial Planning
       </h2>
-      <p className="text-center text-gray-400 mb-10">Manage your budget and track saving goals</p>
+      <p className="text-center text-gray-400 mb-10">Manage your budget, goals and recurring payments</p>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-        {/* Budget Planner */}
+      {/* Row 1: Budget + Saving */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
         <div className="flex flex-col gap-4">
-          <h3 className="text-white font-semibold text-lg">Budget Planner</h3>
+          <h3 className="text-white font-semibold">Budget Planner</h3>
           <Budget />
           <div className="bg-slate-800 p-4 rounded-xl text-sm text-gray-400">
             <p className="text-white font-medium mb-2">💡 Budget Tips</p>
@@ -23,10 +25,8 @@ const Planning = () => {
             </ul>
           </div>
         </div>
-
-        {/* Saving Goals */}
         <div className="flex flex-col gap-4">
-          <h3 className="text-white font-semibold text-lg">Saving Goals</h3>
+          <h3 className="text-white font-semibold">Saving Goals</h3>
           <SavingGoal />
           <div className="bg-slate-800 p-4 rounded-xl text-sm text-gray-400">
             <p className="text-white font-medium mb-2">🎯 Goal Tips</p>
@@ -37,6 +37,12 @@ const Planning = () => {
             </ul>
           </div>
         </div>
+      </div>
+
+      {/* Row 2: Recurring + Export */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <RecurringTransactions />
+        <ExportPDF />
       </div>
     </div>
   );

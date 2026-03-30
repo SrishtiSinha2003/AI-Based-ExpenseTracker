@@ -20,10 +20,8 @@ const userSchema = new mongoose.Schema(
       required: true,
       enum: ["male", "female"],
     },
-    budget: {
-  type: Number,
-  default: 20000
-},
+    budget: { type: Number, default: 20000 },
+    onboardingDone: { type: Boolean, default: false },
     profilePic: {
       type: String,
       default: "/noavatar.png",

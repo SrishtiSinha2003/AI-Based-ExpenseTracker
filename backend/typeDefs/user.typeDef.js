@@ -6,6 +6,8 @@ const userTypeDef = `#graphql
         password: String!
         profilePic: String
         gender: String!
+        budget: Int
+        onboardingDone: Boolean
         transactions: [Transaction!]
     }
 
@@ -18,6 +20,8 @@ const userTypeDef = `#graphql
         register(input: RegisterInput!): User
         login(input: LoginInput): User
         logout: LogoutResponse
+        updateProfile(input: UpdateProfileInput!): User
+        completeOnboarding(budget: Int!): User
     }
 
     input RegisterInput {
@@ -32,12 +36,18 @@ const userTypeDef = `#graphql
         password: String!
     }
 
+    input UpdateProfileInput {
+        name: String
+        gender: String
+    }
+
     type LogoutResponse {
         message: String!
     }
-        extend type Mutation {
-  updateBudget(amount: Int!): Int
-}
+
+    extend type Mutation {
+        updateBudget(amount: Int!): Int
+    }
 `;
 
 export default userTypeDef;

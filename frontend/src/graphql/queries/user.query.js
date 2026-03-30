@@ -8,6 +8,8 @@ export const GET_AUTH_USER = gql`
       name
       profilePic
       gender
+      budget
+      onboardingDone
     }
   }
 `;

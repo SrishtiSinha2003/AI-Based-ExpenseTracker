@@ -1,12 +1,19 @@
 import { Link, NavLink } from "react-router-dom";
+import Notifications from "./Notifications";
+import { useQuery } from "@apollo/client";
+import { GET_AUTH_USER } from "../graphql/queries/user.query";
 
 const navLinks = [
   { to: "/", label: "🏠 Dashboard" },
   { to: "/analytics", label: "📊 Analytics" },
   { to: "/planning", label: "💰 Planning" },
+  { to: "/profile", label: "👤 Profile" },
 ];
 
 const Header = () => {
+  const { data } = useQuery(GET_AUTH_USER);
+  const user = data?.authUser;
+
   return (
     <header className="py-8 z-10 relative">
       <Link to="/">
@@ -23,25 +30,36 @@ const Header = () => {
         </p>
       </Link>
 
-      {/* Nav */}
-      <nav className="flex justify-center gap-2 mt-6">
-        {navLinks.map(({ to, label }) => (
-          <NavLink
-            key={to}
-            to={to}
-            end={to === "/"}
-            className={({ isActive }) =>
-              `px-4 py-2 rounded-xl text-sm font-medium transition-all ${
-                isActive
-                  ? "bg-indigo-500 text-white shadow-lg shadow-indigo-500/30"
-                  : "bg-slate-800 text-gray-400 hover:bg-slate-700 hover:text-white"
-              }`
-            }
-          >
-            {label}
-          </NavLink>
-        ))}
-      </nav>
+      {/* Nav + Notifications */}
+      <div className="flex items-center justify-center gap-3 mt-6">
+        <nav className="flex gap-2">
+          {navLinks.map(({ to, label }) => (
+            <NavLink
+              key={to} to={to} end={to === "/"}
+              className={({ isActive }) =>
+                `px-4 py-2 rounded-xl text-sm font-medium transition-all ${
+                  isActive
+                    ? "bg-indigo-500 text-white shadow-lg shadow-indigo-500/30"
+                    : "bg-slate-800 text-gray-400 hover:bg-slate-700 hover:text-white"
+                }`
+              }
+            >
+              {label}
+            </NavLink>
+          ))}
+        </nav>
+        <Notifications />
+        {user && (
+          <Link to="/profile">
+            <img
+              src={user.profilePic || `https://ui-avatars.com/api/?name=${encodeURIComponent(user.name || user.username)}&background=6366f1&color=fff&bold=true&size=64`}
+              alt="avatar"
+              onError={(e) => { e.target.onerror = null; e.target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(user.name || "U")}&background=6366f1&color=fff&bold=true&size=64`; }}
+              className="w-9 h-9 rounded-xl border-2 border-slate-700 hover:border-indigo-500 transition object-cover"
+            />
+          </Link>
+        )}
+      </div>
 
       <div className="relative mb-6 mt-6 w-1/2 mx-auto hidden md:block">
         <div className="absolute inset-x-20 top-0 bg-gradient-to-r from-transparent via-indigo-500 to-transparent h-[2px] w-3/4 blur-sm" />
