@@ -1,172 +1,177 @@
 import { useMutation, useQuery } from "@apollo/client";
 import { useEffect, useState } from "react";
 import { UPDATE_TRANSACTION } from "../graphql/mutations/transaction.mutation";
-import toast from "react-hot-toast";
 import { GET_TRANSACTION } from "../graphql/queries/transaction.query";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
+import toast from "react-hot-toast";
+import { FaArrowLeft, FaCheck, FaCalendarAlt, FaMapMarkerAlt, FaAlignLeft } from "react-icons/fa";
+
+const CATEGORY_STYLES = {
+  expense: "bg-red-500/20 text-red-400 border-red-500/40",
+  income:  "bg-green-500/20 text-green-400 border-green-500/40",
+  saving:  "bg-blue-500/20 text-blue-400 border-blue-500/40",
+};
+
+const CAT_META = {
+  expense: { icon: "💸", color: "#ef4444" },
+  income:  { icon: "💰", color: "#22c55e" },
+  saving:  { icon: "🏦", color: "#3b82f6" },
+};
+
+const Field = ({ label, icon: Icon, children }) => (
+  <div>
+    <label className="text-xs text-gray-400 mb-1.5 flex items-center gap-1.5">
+      {Icon && <Icon size={11} className="text-gray-500" />} {label}
+    </label>
+    {children}
+  </div>
+);
+
+const inputCls = "w-full bg-slate-700/60 border border-slate-600 text-white text-sm rounded-xl px-3 py-2.5 outline-none focus:border-indigo-500 transition placeholder-gray-500";
 
 const Transaction = () => {
   const { id } = useParams();
+  const navigate = useNavigate();
 
-  const { data, loading } = useQuery(GET_TRANSACTION, {
-    variables: { id: id },
-  });
-  const [updateTransaction] = useMutation(UPDATE_TRANSACTION);
+  const { data, loading } = useQuery(GET_TRANSACTION, { variables: { id } });
+  const [updateTransaction, { loading: updating }] = useMutation(UPDATE_TRANSACTION);
 
   const [form, setForm] = useState({
-    description: "",
-    type: "",
-    category: "",
-    amount: "",
-    location: "",
-    date: new Date(),
+    description: "", type: "card", category: "expense",
+    amount: "", location: "", date: "",
   });
 
   useEffect(() => {
-    if (data) {
+    if (data?.getTransaction) {
+      const tx = data.getTransaction;
       setForm({
-        description: data.getTransaction.description,
-        type: data.getTransaction.type,
-        category: data.getTransaction.category,
-        amount: data.getTransaction.amount,
-        location: data.getTransaction.location,
-        date: data.getTransaction.date,
+        description: tx.description || "",
+        type:        tx.type        || "card",
+        category:    tx.category    || "expense",
+        amount:      tx.amount      || "",
+        location:    tx.location    || "",
+        date:        tx.date?.split("T")[0] || "",
       });
     }
   }, [data]);
 
-  const handleChange = (e) => {
-    setForm({ ...form, [e.target.name]: e.target.value });
-  };
+  const handleChange = (e) => setForm({ ...form, [e.target.name]: e.target.value });
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (!form.description || !form.amount || !form.date) {
+      toast.error("Fill description, amount and date"); return;
+    }
     try {
       await updateTransaction({
-        variables: {
-          input: {
-            transactionId: id,
-            ...form,
-            amount: parseFloat(form.amount),
-          },
-        },
+        variables: { input: { transactionId: id, ...form, amount: parseFloat(form.amount) } },
       });
-      toast.success("Transaction updated successfully");
-      window.location.href = "/";
-    } catch (error) {
-      console.log(error);
-      toast.error(error.message);
+      toast.success("Transaction updated!");
+      navigate("/");
+    } catch (err) {
+      toast.error(err.message);
     }
   };
 
-  if (data === undefined) {
-    return (
-      <div className="absolute bottom-0 h-screen w-full flex justify-center items-center pt-20 md:pt-0">
-        <h1 className="text-4xl">No acces to this transaction</h1>
-      </div>
-    );
-  }
+  if (loading) return (
+    <div className="min-h-screen flex items-center justify-center">
+      <div className="w-8 h-8 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin" />
+    </div>
+  );
+
+  if (!data?.getTransaction) return (
+    <div className="min-h-screen flex flex-col items-center justify-center gap-4">
+      <p className="text-gray-400 text-lg">Transaction not found</p>
+      <button onClick={() => navigate("/")} className="text-indigo-400 hover:text-indigo-300 text-sm flex items-center gap-2">
+        <FaArrowLeft size={12} /> Back to Dashboard
+      </button>
+    </div>
+  );
+
+  const meta = CAT_META[form.category] || CAT_META.expense;
 
   return (
-    <div className="absolute bottom-0 h-screen w-full flex justify-center items-center pt-20 md:pt-0">
-      <form className="flex flex-col gap-2 md:gap-4 mt-4 p-3 md:p-0 w-full md:w-1/2 xl:w-1/3">
-        <div className="flex flex-col gap-1 md:gap-2">
-          <label htmlFor="description">Description</label>
-          <input
-            className="border rounded-lg p-2 text-black"
-            type="text"
-            id="description"
-            name="description"
-            maxLength="50"
-            onChange={handleChange}
-            placeholder={form.description}
-          />
-        </div>
-        <div className="flex flex-col md:flex-row items-center gap-2 md:gap-4">
-          <div className="flex flex-col gap-1 md:gap-2 w-full">
-            <label className="text-nowrap" htmlFor="type">
-              Payment Type
-            </label>
-            <select
-              className="border rounded-lg p-2 text-black"
-              name="type"
-              id="type"
-              onChange={handleChange}
-            >
-              <option value="card" selected={form.type === "card"}>
-                Card
-              </option>
-              <option value="cash" selected={form.type === "cash"}>
-                Cash
-              </option>
-            </select>
-          </div>
-          <div className="flex flex-col gap-1 md:gap-2 w-full">
-            <label htmlFor="category">Category</label>
-            <select
-              className="border rounded-lg p-2 text-black"
-              name="category"
-              id="category"
-              onChange={handleChange}
-            >
-              <option value="expense" selected={form.category === "expense"}>
-                Expense
-              </option>
-              <option value="income" selected={form.category === "income"}>
-                Income
-              </option>
-              <option value="saving" selected={form.category === "saving"}>
-                Savings
-              </option>
-            </select>
-          </div>
-          <div className="flex flex-col gap-1 md:gap-2 w-full">
-            <label htmlFor="amount">Amount</label>
-            <input
-              className="border rounded-lg p-2 text-black"
-              type="number"
-              id="amount"
-              name="amount"
-              min={1}
-              max={1000000}
-              onChange={handleChange}
-              placeholder={form.amount}
-            />
-          </div>
-        </div>
-        <div className="flex flex-col md:flex-row items-center gap-2 md:gap-4">
-          <div className="flex flex-col gap-1 md:gap-2 w-full">
-            <label htmlFor="location">Location</label>
-            <input
-              className="border rounded-lg p-2 text-black"
-              type="text"
-              id="location"
-              name="location"
-              maxLength="50"
-              onChange={handleChange}
-              placeholder={form.location}
-            />
-          </div>
-          <div className="flex flex-col gap-1 md:gap-2 w-full">
-            <label htmlFor="date">Date</label>
-            <input
-              className="border rounded-lg p-2 text-black"
-              type="date"
-              id="date"
-              name="date"
-              onChange={handleChange}
-              value={form.date}
-            />
-          </div>
-        </div>
-        <button
-          className="bg-blue-500 text-white p-2 rounded-md mt-4 hover:bg-blue-400 disabled:bg-gray-300 disabled:cursor-not-allowed"
-          onClick={handleSubmit}
-          disabled={loading || data === undefined}
-        >
-          Update transaction
+    <div className="min-h-screen flex items-center justify-center px-4 py-10">
+      <div className="w-full max-w-md">
+        {/* Back */}
+        <button onClick={() => navigate("/")}
+          className="flex items-center gap-2 text-gray-400 hover:text-white transition text-sm mb-6">
+          <FaArrowLeft size={12} /> Back to Dashboard
         </button>
-      </form>
+
+        <div className="bg-slate-800/80 backdrop-blur-sm border border-slate-700/50 rounded-2xl p-6 shadow-xl">
+          {/* Header */}
+          <div className="flex items-center gap-3 mb-6">
+            <div className="w-10 h-10 rounded-xl flex items-center justify-center text-xl"
+              style={{ background: `${meta.color}20`, border: `1px solid ${meta.color}40` }}>
+              {meta.icon}
+            </div>
+            <div>
+              <h2 className="text-white font-semibold text-base">Edit Transaction</h2>
+              <p className="text-gray-400 text-xs capitalize">{form.category} · {form.type}</p>
+            </div>
+          </div>
+
+          <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+            {/* Category toggle */}
+            <div className="flex gap-2">
+              {["expense", "income", "saving"].map((cat) => (
+                <button key={cat} type="button"
+                  onClick={() => setForm({ ...form, category: cat })}
+                  className={`flex-1 py-1.5 rounded-lg text-xs font-medium border capitalize transition ${
+                    form.category === cat ? CATEGORY_STYLES[cat] : "bg-slate-700 text-gray-400 border-slate-600 hover:bg-slate-600"
+                  }`}>
+                  {cat}
+                </button>
+              ))}
+            </div>
+
+            {/* Description */}
+            <Field label="Description" icon={FaAlignLeft}>
+              <input name="description" value={form.description} onChange={handleChange}
+                placeholder="e.g. Grocery shopping" className={inputCls} />
+            </Field>
+
+            {/* Amount + Type */}
+            <div className="flex gap-3">
+              <Field label="Amount (₹)">
+                <div className="flex items-center bg-slate-700/60 border border-slate-600 rounded-xl px-3 py-2.5 gap-1 focus-within:border-indigo-500 transition">
+                  <span className="text-gray-500 text-sm">₹</span>
+                  <input type="number" name="amount" value={form.amount} onChange={handleChange}
+                    placeholder="0" min={1} max={1000000}
+                    className="bg-transparent text-white text-sm w-full outline-none placeholder-gray-500" />
+                </div>
+              </Field>
+              <Field label="Payment Type">
+                <select name="type" value={form.type} onChange={handleChange}
+                  className={inputCls}>
+                  <option value="card">💳 Card</option>
+                  <option value="cash">💵 Cash</option>
+                </select>
+              </Field>
+            </div>
+
+            {/* Location */}
+            <Field label="Location" icon={FaMapMarkerAlt}>
+              <input name="location" value={form.location} onChange={handleChange}
+                placeholder="e.g. Mumbai" className={inputCls} />
+            </Field>
+
+            {/* Date */}
+            <Field label="Date" icon={FaCalendarAlt}>
+              <input type="date" name="date" value={form.date} onChange={handleChange}
+                className={`${inputCls} [color-scheme:dark]`} />
+            </Field>
+
+            {/* Submit */}
+            <button type="submit" disabled={updating}
+              className="mt-1 w-full flex items-center justify-center gap-2 bg-indigo-500 hover:bg-indigo-600 disabled:opacity-50 text-white font-medium py-2.5 rounded-xl transition shadow-lg shadow-indigo-500/20">
+              <FaCheck size={12} />
+              {updating ? "Updating..." : "Update Transaction"}
+            </button>
+          </form>
+        </div>
+      </div>
     </div>
   );
 };

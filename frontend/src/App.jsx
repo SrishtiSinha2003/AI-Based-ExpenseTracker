@@ -1,9 +1,11 @@
-import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
+import { BrowserRouter, Navigate, Route, Routes, useLocation } from "react-router-dom";
+import { AnimatePresence, motion } from "framer-motion";
 import Home from "./pages/Home";
 import Header from "./components/Header";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import Transaction from "./pages/Transaction";
+import Transactions from "./pages/Transactions";
 import Analytics from "./pages/Analytics";
 import Planning from "./pages/Planning";
 import Profile from "./pages/Profile";
@@ -12,6 +14,63 @@ import ChatBot from "./components/ChatBot";
 import { Toaster } from "react-hot-toast";
 import { useQuery } from "@apollo/client";
 import { GET_AUTH_USER } from "./graphql/queries/user.query";
+
+const pageVariants = {
+  initial: { opacity: 0, y: 12 },
+  animate: { opacity: 1, y: 0, transition: { duration: 0.2, ease: "easeOut" } },
+  exit:    { opacity: 0, y: -8, transition: { duration: 0.15 } },
+};
+
+const PageWrapper = ({ children }) => (
+  <motion.div variants={pageVariants} initial="initial" animate="animate" exit="exit">
+    {children}
+  </motion.div>
+);
+
+const AnimatedRoutes = ({ authUser, needsOnboarding }) => {
+  const location = useLocation();
+  return (
+    <AnimatePresence mode="wait">
+      <Routes location={location} key={location.pathname}>
+        <Route path="/onboarding" element={
+          !authUser ? <Navigate to="/login" /> :
+          authUser.onboardingDone ? <Navigate to="/" /> :
+          <PageWrapper><Onboarding /></PageWrapper>
+        } />
+        <Route path="/" element={
+          !authUser ? <Navigate to="/login" /> :
+          needsOnboarding ? <Navigate to="/onboarding" /> :
+          <PageWrapper><Home /></PageWrapper>
+        } />
+        <Route path="/analytics" element={
+          !authUser ? <Navigate to="/login" /> :
+          needsOnboarding ? <Navigate to="/onboarding" /> :
+          <PageWrapper><Analytics /></PageWrapper>
+        } />
+        <Route path="/planning" element={
+          !authUser ? <Navigate to="/login" /> :
+          needsOnboarding ? <Navigate to="/onboarding" /> :
+          <PageWrapper><Planning /></PageWrapper>
+        } />
+        <Route path="/transactions" element={
+          !authUser ? <Navigate to="/login" /> :
+          needsOnboarding ? <Navigate to="/onboarding" /> :
+          <PageWrapper><Transactions /></PageWrapper>
+        } />
+        <Route path="/profile" element={
+          !authUser ? <Navigate to="/login" /> :
+          needsOnboarding ? <Navigate to="/onboarding" /> :
+          <PageWrapper><Profile /></PageWrapper>
+        } />
+        <Route path="/login"    element={authUser ? <Navigate to="/" /> : <PageWrapper><Login /></PageWrapper>} />
+        <Route path="/register" element={authUser ? <Navigate to="/" /> : <PageWrapper><Register /></PageWrapper>} />
+        <Route path="/transaction/:id" element={
+          authUser ? <PageWrapper><Transaction /></PageWrapper> : <Navigate to="/login" />
+        } />
+      </Routes>
+    </AnimatePresence>
+  );
+};
 
 function App() {
   const { data, loading, error } = useQuery(GET_AUTH_USER);
@@ -29,40 +88,9 @@ function App() {
   return (
     <BrowserRouter>
       {authUser && !needsOnboarding && <Header />}
-      <Routes>
-        {/* Onboarding gate */}
-        <Route path="/onboarding" element={
-          !authUser ? <Navigate to="/login" /> :
-          authUser.onboardingDone ? <Navigate to="/" /> :
-          <Onboarding />
-        } />
-
-        <Route path="/" element={
-          !authUser ? <Navigate to="/login" /> :
-          needsOnboarding ? <Navigate to="/onboarding" /> :
-          <Home />
-        } />
-        <Route path="/analytics" element={
-          !authUser ? <Navigate to="/login" /> :
-          needsOnboarding ? <Navigate to="/onboarding" /> :
-          <Analytics />
-        } />
-        <Route path="/planning" element={
-          !authUser ? <Navigate to="/login" /> :
-          needsOnboarding ? <Navigate to="/onboarding" /> :
-          <Planning />
-        } />
-        <Route path="/profile" element={
-          !authUser ? <Navigate to="/login" /> :
-          needsOnboarding ? <Navigate to="/onboarding" /> :
-          <Profile />
-        } />
-        <Route path="/login"    element={authUser ? <Navigate to="/" /> : <Login />} />
-        <Route path="/register" element={authUser ? <Navigate to="/" /> : <Register />} />
-        <Route path="/transaction/:id" element={authUser ? <Transaction /> : <Navigate to="/login" />} />
-      </Routes>
+      <AnimatedRoutes authUser={authUser} needsOnboarding={needsOnboarding} />
       {authUser && !needsOnboarding && <ChatBot />}
-      <Toaster />
+      <Toaster position="top-right" toastOptions={{ style: { background: "#1e293b", color: "#fff", border: "1px solid #334155" } }} />
     </BrowserRouter>
   );
 }

@@ -3,32 +3,19 @@ import { createRoot } from "react-dom/client";
 import App from "./App.jsx";
 import "./index.css";
 import { GridBackground } from "./components/ui/Background";
+import { ThemeProvider } from "./context/ThemeContext.jsx";
 import {
   ApolloClient,
-  ApolloLink,
   ApolloProvider,
   HttpLink,
   InMemoryCache,
-  concat,
 } from "@apollo/client";
 
-// const httpLink = new HttpLink({ uri: "http://localhost:4000/graphql" });
-
-// const authLink = new ApolloLink((operation, forward) => {
-//   const token = localStorage.getItem("token");
-//   operation.setContext({
-//     headers: { authorization: token ? `Bearer ${token}` : null },
-//   });
-//   return forward(operation);
-// });
-
-
 const httpLink = new HttpLink({
-  uri:
-    import.meta.env.VITE_NODE_ENV === "development"
-      ? "http://localhost:4000/graphql"
-      : "/graphql",
-  credentials: "include", // ✅ FIX HERE
+  uri: import.meta.env.VITE_NODE_ENV === "development"
+    ? "http://localhost:4000/graphql"
+    : "/graphql",
+  credentials: "include",
 });
 
 const client = new ApolloClient({
@@ -38,12 +25,21 @@ const client = new ApolloClient({
 
 export default client;
 
+// Register service worker for PWA
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", () => {
+    navigator.serviceWorker.register("/sw.js").catch(() => {});
+  });
+}
+
 createRoot(document.getElementById("root")).render(
   <StrictMode>
-    <GridBackground>
-      <ApolloProvider client={client}>
-        <App />
-      </ApolloProvider>
-    </GridBackground>
+    <ThemeProvider>
+      <GridBackground>
+        <ApolloProvider client={client}>
+          <App />
+        </ApolloProvider>
+      </GridBackground>
+    </ThemeProvider>
   </StrictMode>
 );
